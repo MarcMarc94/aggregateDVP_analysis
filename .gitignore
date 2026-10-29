@@ -1,0 +1,28 @@
+# Python and Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Archives (data.zip holds the data/ folder, PRIDE files included)
+*.zip
+
+# Written by the notebooks
+results/
+figures/
+# GSEA results; the review.csv decision files and the review notes are committed
+gsea/**/*_raw.csv
+gsea/**/*_terms_full.csv
+gsea/**/params.json
+gsea/**/*_grid.csv
+gsea/**/review_before_*.csv
+gsea/**/*.png
+gsea/**/*.svg
+
+# Search outputs from PRIDE (see README); sample annotations and resources are committed
+data/**/report.pg_matrix.tsv
+data/**/report.pr_matrix.tsv
+data/Nanophos/*_Report*.tsv
+data/Nanophos/*.fasta

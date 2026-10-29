@@ -1,0 +1,113 @@
+# Gene-family dictionary for GSEA cluster labelling.
+#
+# Used ONLY to suggest a `family_label` to the reviewer. It never affects
+# clustering, selection, or plotting — but a wrong label is worse than no label,
+# so the boundaries between adjacent machineries matter.
+#
+# Resolution is three-tier, in this order:
+#   1. `exact`  — full gene symbols, matched first because prefixes collide
+#   2. `prefix` — symbol.startswith(...)
+#   3. unlabelled
+#
+# Scoring: for each bucket, the fraction of the cluster's core genes it matches.
+# The bucket with the highest fraction wins, and only if it clears `min_fraction`.
+# Argmax, not first-match — a core can match two buckets and ordering should not
+# decide which.
+#
+# The failure this structure prevents: a flat dictionary with COPS / UBA / UBE in
+# the proteasome bucket scores GOBP_PROTEIN_NEDDYLATION's 13-gene core at
+# COPS3/4/5/7A/8 + UBA3 + UBE2M = 7/13 = 54%, over the floor, and labels it
+# "26S proteasome" on every run. Against a strict PSM* definition it scores 0%.
+#
+# NOTE ON COVERAGE: prefix-only schemes are silently biased toward
+# systematically-named machinery. Functionally-defined modules (NRF2 antioxidant
+# response, autophagy receptors) share no naming pattern and would never be
+# labelled. Those buckets are therefore `exact`-only. Extend as needed.
+
+min_fraction: 0.5
+
+# Below this core size the label is computed from the consensus set (genes in
+# >=50% of members) instead of the core (intersection of all members). Complete
+# linkage guarantees pairwise overlap but not a non-empty intersection, and the
+# intersection shrinks as members accumulate.
+core_size_fallback: 5
+
+families:
+
+  "26S proteasome":
+    prefix: [PSMA, PSMB, PSMC, PSMD, PSME, PSMF]
+    exact:  [ADRM1, SEM1, POMP]
+
+  "Ubiquitin / conjugation":
+    prefix: [UBB, UBC, UBE2, UBA]
+    # ubiquitin-ribosomal fusion proteins: would otherwise hit RPS*/RPL*
+    exact:  [RPS27A, UBA52]
+
+  "CRL / neddylation / COP9":
+    prefix: [CUL, RBX, SKP, DCUN1D, COPS]
+    # UBA3 and UBE2M would otherwise hit the ubiquitin prefixes above
+    exact:  [NEDD8, NAE1, UBA3, UBE2M, GPS1, CAND1, DDB1]
+
+  "Chaperones":
+    prefix: [HSPA, HSPB, HSPH, HSP90, DNAJ, BAG, CCT]
+    exact:  [TCP1, PFDN1, PFDN2, PFDN4, PFDN5, PFDN6, STIP1, AHSA1]
+
+  "Ribosome (structural)":
+    prefix: [RPL, RPS, RPLP]
+    exact:  [RPSA, FAU]
+
+  "Ribosome biogenesis":
+    prefix: [NOP, RRP, UTP]
+    exact:  [FBL, BYSL, EMG1, NAT10, TSR1, HEATR1, WDR43, WDR46, DCAF13, TBL3, DHX37]
+
+  "OXPHOS":
+    prefix: [NDUF, COX, UQCR, ATP5, SDH, "MT-ND", "MT-CO"]
+    exact:  [CYC1, "MT-CYB", OXA1L, BCS1L, TIMMDC1, ACAD9]
+
+  "Solute carriers":
+    prefix: [SLC]
+    exact:  []
+
+  "Spliceosome":
+    prefix: [SNRP, SF3, SRSF, LUC7L, PRPF]
+    exact:  [U2AF1, U2AF2, DDX46, DDX42, RBMX2, SFSWAP, ISY1]
+
+  "Mitochondrial import":
+    prefix: [TOMM, TIMM]
+    exact:  [SAMM50, PAM16, MTX1, MTX2, MTX3, DNAJC19]
+
+  "Mitochondrial cristae / MICOS":
+    prefix: [APOO, CHCHD]
+    exact:  [IMMT, MICOS13, OPA1, DNAJC11, GHITM, AFG3L2, LETM1, MAIP1]
+
+  "Clathrin / AP2 endocytosis":
+    prefix: [AP2, CLT]
+    exact:  [DNM1, DNM2, SNX9, EPS15, PICALM]
+
+  "Exocyst":
+    prefix: [EXOC]
+    exact:  []
+
+  "COPI / COPII vesicle coat":
+    prefix: [SEC2, SEC3, COPA, COPB, COPG, TMED, ARCN]
+    exact:  [SEC22B, LMAN1, LMAN2L, SURF4, MIA2, MIA3, SAR1A, SAR1B]
+
+  "Histones / nucleosome":
+    prefix: [H1-, H2A, H2B, H3-, H4-, HIST, NAP1L, SMARC]
+    exact:  [NPM1, SET, NASP, HAT1, RBBP4, SSRP1, ANP32B, DAXX, SUPT6H]
+
+  # ---- Functionally defined: no shared naming pattern, exact-only ----
+
+  "NRF2 antioxidant response":
+    prefix: []
+    exact:  [HMOX1, GCLM, GCLC, TXNRD1, PRDX1, PRDX2, PRDX3, PRDX6,
+             GSR, G6PD, TKT, TALDO1, SESN2, NQO1, SRXN1, KEAP1, NFE2L2]
+
+  "Autophagy receptors":
+    prefix: []
+    exact:  [SQSTM1, NBR1, OPTN, CALCOCO1, CALCOCO2, TAX1BP1, NCOA4]
+
+  "Iron homeostasis":
+    prefix: []
+    exact:  [FTH1, FTL, FTMT, IREB2, ACO1, TFRC, TFR2, SLC11A2, SLC40A1,
+             PCBP1, PCBP2, BDH2, CISD1, CISD2]
