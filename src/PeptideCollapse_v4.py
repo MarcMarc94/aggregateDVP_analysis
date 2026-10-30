@@ -323,9 +323,32 @@ def _collapse_sites(df: pd.DataFrame):
     result["PTM_localization"] = result["PTM_localization"].replace(-1, np.nan)
     result.columns = [c[1] if isinstance(c, tuple) else c for c in result.columns]
 
+    full_keys = result["PTM_Collapse_key"].copy()
     result = _protein_group_keys(result)
+    loc_per_run = _rekey_localization(loc_per_run, full_keys, result["PTM_Collapse_key"])
     logger.info("Site final output: %d sites, %d samples", len(result), quant.shape[1])
     return result, loc_per_run
+
+
+def _rekey_localization(loc_per_run: pd.DataFrame, full_keys: pd.Series,
+                        site_keys: pd.Series) -> pd.DataFrame:
+    """Give loc_per_run the keys of the site table. _protein_group_keys shortens
+    each site key to the first accession and the first gene of its protein group,
+    and the Class I mask looks every site up by the shortened key; a site of a
+    group with several accessions would otherwise find no localisation."""
+    key_map = pd.Series(site_keys.to_numpy(), index=full_keys.to_numpy())
+    shared = key_map[key_map.duplicated(keep=False)]
+    if len(shared):
+        raise ValueError(f"{shared.nunique()} site keys are produced by more than one "
+                         f"protein group after shortening, e.g. "
+                         f"{shared.index[:4].tolist()}")
+    no_site = loc_per_run.index.difference(key_map.index)
+    if len(no_site):
+        raise ValueError(f"{len(no_site)} localisation rows have no site, e.g. "
+                         f"{no_site[:3].tolist()}")
+    logger.info("Localisation matrix re-keyed to the site keys: %d of %d keys changed",
+                int((key_map.index != key_map.to_numpy()).sum()), len(key_map))
+    return loc_per_run.rename(index=key_map.to_dict())
 
 
 def _marked_sequence(sequence: str, position: int) -> str:

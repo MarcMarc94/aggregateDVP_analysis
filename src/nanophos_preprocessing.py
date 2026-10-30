@@ -335,6 +335,12 @@ def apply_condition_aware_classI_mask(
              .astype(float)
              .copy())
 
+    # A site without a localisation row would be masked in every sample below.
+    no_loc = quant.index.difference(loc_per_run.index)
+    if len(no_loc):
+        raise ValueError(f"{len(no_loc)} sites of df_sites have no row in loc_per_run, "
+                         f"e.g. {no_loc[:3].tolist()}; the two tables must share "
+                         f"PTM_Collapse_key")
     loc = loc_per_run.reindex(index=quant.index, columns=quant.columns)
 
     # Per-cell Class I status: True iff loc >= cutoff. NaN loc => False.
